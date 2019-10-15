@@ -47,26 +47,35 @@ class visualization_model_class(object):
                 plt.close()
             image_index += 1
 
+    def make_grid_from_kernel(self, weights, image_index=0, layer_name=''):
+        n_features = weights.shape[-1]
+        split = 2
+        while n_features / split % 2 == 0 and n_features / split >= split:
+            split *= 2
+        split /= 2
+        images_per_row = int(n_features // split)
+        n_cols = n_features // images_per_row
+        for i in range(1, n_features + 1):
+            plt.subplot(images_per_row, n_cols, i)
+            weight = weights[..., i - 1]
+            # weight = (weight-np.mean(weight))/np.std(weight)
+            plt.imshow(weight, interpolation="nearest", cmap="gray")
+        plt.show()
+        plt.grid(False)
+        if self.save_images:
+            plt.savefig(os.path.join(self.out_path, str(image_index) + '_' + layer_name + '.png'))
+            plt.close()
+        return None
 
     def plot_kernels(self):
         if not self.out_path and self.save_images:
             self.define_output(os.path.join('.','kernel_outputs'))
         image_index = 0
-        print(self.layer_names)
         for layer_name in self.layer_names:
             print(layer_name)
-            print(self.layer_names.index(layer_name) / len(self.layer_names) * 100)
             layer = [i for i in self.activation_model.layers if i.name == layer_name][0]
             kernels = np.squeeze(layer.get_weights()[0])
-            display_grid = make_grid_from_map(kernels)
-            scale = 0.05
-            plt.figure(figsize=(display_grid.shape[1] * scale, scale * display_grid.shape[0]))
-            plt.title(layer_name)
-            plt.grid(False)
-            plt.imshow(display_grid, aspect='auto', cmap='gray')
-            if self.save_images:
-                plt.savefig(os.path.join(self.out_path, str(image_index) + '_' + layer_name + '.png'))
-                plt.close()
+            self.make_grid_from_kernel(kernels, image_index=image_index,layer_name=layer_name)
             image_index += 1
 
 def visualize_activations(model, img_tensor, out_path = os.path.join('.','activation_outputs')):
@@ -122,6 +131,8 @@ def make_grid_from_map(layer_activation):
             display_grid[row * rows_size: (row + 1) * rows_size,
             col * cols_size: (col + 1) * cols_size] = channel_image
     return display_grid
+
+
 
 
 def decay_regularization(img, grads, decay = 0.9):
