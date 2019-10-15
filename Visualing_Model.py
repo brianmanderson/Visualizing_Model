@@ -35,7 +35,10 @@ class visualization_model_class(object):
         for layer_name, layer_activation in zip(self.layer_names, self.activations):
             print(layer_name)
             print(self.layer_names.index(layer_name) / len(self.layer_names) * 100)
-            layer_activation = np.squeeze(layer_activation)
+            if len(layer_activation.shape) == 4:
+                layer_activation = layer_activation[...,0,:]
+            elif len(layer_activation.shape) == 5:
+                layer_activation = layer_activation[0,...,0,:]
             display_grid = make_grid_from_map(layer_activation)
             scale = 0.05
             plt.figure(figsize=(display_grid.shape[1] * scale, scale * display_grid.shape[0]))
@@ -74,7 +77,12 @@ class visualization_model_class(object):
         for layer_name in self.layer_names:
             print(layer_name)
             layer = [i for i in self.activation_model.layers if i.name == layer_name][0]
-            kernels = np.squeeze(layer.get_weights()[0])
+            kernels = layer.get_weights()[0]
+            if len(kernels.shape) == 4:
+                kernels = kernels[...,0,:]
+            elif len(kernels.shape) == 5:
+                kernels = kernels[0,...,0,:]
+            plt.figure()
             self.make_grid_from_kernel(kernels, image_index=image_index,layer_name=layer_name)
             image_index += 1
 
