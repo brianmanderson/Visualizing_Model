@@ -56,7 +56,8 @@ class visualization_model_class(object):
         for layer_name in self.layer_names:
             print(layer_name)
             print(self.layer_names.index(layer_name) / len(self.layer_names) * 100)
-            kernels = np.squeeze(self.activation_model.layers[self.layer_names.index(layer_name)].get_weights()[0])
+            layer = [i for i in self.activation_model.layers if i.name == layer_name][0]
+            kernels = np.squeeze(layer.get_weights()[0])
             display_grid = make_grid_from_map(kernels)
             scale = 0.05
             plt.figure(figsize=(display_grid.shape[1] * scale, scale * display_grid.shape[0]))
