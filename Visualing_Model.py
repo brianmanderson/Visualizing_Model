@@ -36,7 +36,7 @@ class visualization_model_class(object):
             print(layer_name)
             print(self.layer_names.index(layer_name) / len(self.layer_names) * 100)
             layer_activation = np.squeeze(layer_activation)
-            display_grid = make_grid_from_activation(layer_activation)
+            display_grid = make_grid_from_map(layer_activation)
             scale = 0.05
             plt.figure(figsize=(display_grid.shape[1] * scale, scale * display_grid.shape[0]))
             plt.title(layer_name)
@@ -47,7 +47,28 @@ class visualization_model_class(object):
                 plt.close()
             image_index += 1
 
-def visualize_model(model, img_tensor, out_path = os.path.join('.','activation_outputs')):
+
+    def plot_kernels(self):
+        if not self.out_path and self.save_images:
+            self.define_output(os.path.join('.','kernel_outputs'))
+        image_index = 0
+        print(self.layer_names)
+        for layer_name in self.layer_names:
+            print(layer_name)
+            print(self.layer_names.index(layer_name) / len(self.layer_names) * 100)
+            kernels = np.squeeze(self.activation_model.layers[self.layer_names.index(layer_name)].get_weights()[0])
+            display_grid = make_grid_from_map(kernels)
+            scale = 0.05
+            plt.figure(figsize=(display_grid.shape[1] * scale, scale * display_grid.shape[0]))
+            plt.title(layer_name)
+            plt.grid(False)
+            plt.imshow(display_grid, aspect='auto', cmap='gray')
+            if self.save_images:
+                plt.savefig(os.path.join(self.out_path, str(image_index) + '_' + layer_name + '.png'))
+                plt.close()
+            image_index += 1
+
+def visualize_activations(model, img_tensor, out_path = os.path.join('.','activation_outputs')):
     if not os.path.exists(out_path):
         os.makedirs(out_path)
     all_layers = model.layers[1:]
@@ -61,7 +82,7 @@ def visualize_model(model, img_tensor, out_path = os.path.join('.','activation_o
         print(layer_name)
         print(layer_names.index(layer_name)/len(layer_names) * 100)
         layer_activation = np.squeeze(layer_activation)
-        display_grid = make_grid_from_activation(layer_activation)
+        display_grid = make_grid_from_map(layer_activation)
         scale = 0.05
         plt.figure(figsize=(display_grid.shape[1] * scale, scale * display_grid.shape[0]))
         plt.title(layer_name)
@@ -71,7 +92,7 @@ def visualize_model(model, img_tensor, out_path = os.path.join('.','activation_o
         plt.close()
         image_index += 1
 
-def make_grid_from_activation(layer_activation):
+def make_grid_from_map(layer_activation):
     n_features = layer_activation.shape[-1]
     split = 2
     while n_features / split % 2 == 0 and n_features / split >= split:
