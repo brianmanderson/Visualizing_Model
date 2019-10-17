@@ -5,20 +5,21 @@ import matplotlib.pyplot as plt
 from keras.models import Model
 
 class visualization_model_class(object):
-    def __init__(self, model,verbose=True, save_images=False):
+    def __init__(self, model,verbose=True, save_images=False, out_path=os.path.join('.','Activations')):
         self.save_images = save_images
-        self.out_path = None
+        self.out_path = out_path
         self.model = model
         all_layers = model.layers[:]
         self.all_layers = [layer for layer in all_layers if layer.name.find('mask') == -1 and
                       layer.name.lower().find('input') == -1 and
-                      layer.name.lower().find('batch_normalization') == -1 and
-                      layer.name.lower().find('activation') == -1]
+                      layer.name.lower().find('batch_normalization') == -1]
         if verbose:
             self.print_all_layers()
+
     def print_all_layers(self):
         for layer in self.all_layers:
             print(layer.name)
+
     def define_desired_layers(self, desired_layer_names=None):
         all_layers = self.all_layers
         if desired_layer_names:
@@ -29,6 +30,8 @@ class visualization_model_class(object):
 
     def predict_on_tensor(self, img_tensor):
         self.activations = self.activation_model.predict(img_tensor)
+        if type(self.activations) != list:
+            self.activations = [self.activations]
 
     def define_output(self,out_path):
         self.out_path = out_path
@@ -38,29 +41,34 @@ class visualization_model_class(object):
     def plot_activations(self):
         if not self.out_path and self.save_images:
             self.define_output(os.path.join('.','activation_outputs'))
+        elif self.save_images:
+            self.define_output(self.out_path)
         image_index = 0
         print(self.layer_names)
         for layer_name, layer_activation in zip(self.layer_names, self.activations):
             print(layer_name)
             print(self.layer_names.index(layer_name) / len(self.layer_names) * 100)
             if len(layer_activation.shape) == 4:
-                layer_activation = layer_activation[...,0,:]
+                layer_activation = layer_activation[layer_activation.shape[0]//2,...]
             elif len(layer_activation.shape) == 5:
                 layer_activation = layer_activation[0,...,0,:]
             display_grid = make_grid_from_map(layer_activation)
-            scale = 0.05
+            scale = 0.01
             plt.figure(figsize=(display_grid.shape[1] * scale, scale * display_grid.shape[0]))
+            plt.imshow(display_grid, aspect='auto', cmap='gray')
             plt.title(layer_name)
             plt.grid(False)
-            plt.imshow(display_grid, aspect='auto', cmap='gray')
             if self.save_images:
                 plt.savefig(os.path.join(self.out_path, str(image_index) + '_' + layer_name + '.png'))
                 plt.close()
+            plt.close()
             image_index += 1
 
     def plot_activation(self, layer_name):
         if not self.out_path and self.save_images:
             self.define_output(os.path.join('.','activation_outputs'))
+        elif self.save_images:
+            self.define_output(self.out_path)
         image_index = 0
         print(self.layer_names)
         index = self.layer_names.index(layer_name)
@@ -117,6 +125,7 @@ class visualization_model_class(object):
             self.make_grid_from_kernel(kernels, image_index=image_index,layer_name=layer_name)
             image_index += 1
 
+
 def visualize_activations(model, img_tensor, out_path = os.path.join('.','activation_outputs')):
     if not os.path.exists(out_path):
         os.makedirs(out_path)
@@ -140,6 +149,7 @@ def visualize_activations(model, img_tensor, out_path = os.path.join('.','activa
         plt.savefig(os.path.join(out_path,str(image_index) + '_' + layer_name + '.png'))
         plt.close()
         image_index += 1
+
 
 def make_grid_from_map(layer_activation):
     n_features = layer_activation.shape[-1]
@@ -170,8 +180,6 @@ def make_grid_from_map(layer_activation):
             display_grid[row * rows_size: (row + 1) * rows_size,
             col * cols_size: (col + 1) * cols_size] = channel_image
     return display_grid
-
-
 
 
 def decay_regularization(img, grads, decay = 0.9):
