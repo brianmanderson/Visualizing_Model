@@ -61,7 +61,6 @@ class visualization_model_class(object):
             if self.save_images:
                 plt.savefig(os.path.join(self.out_path, str(image_index) + '_' + layer_name + '.png'))
                 plt.close()
-            plt.close()
             image_index += 1
 
     def plot_activation(self, layer_name):
