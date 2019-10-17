@@ -5,19 +5,27 @@ import matplotlib.pyplot as plt
 from keras.models import Model
 
 class visualization_model_class(object):
-    def __init__(self, model,desired_layer_names=None, save_images=False):
+    def __init__(self, model,verbose=True, save_images=False):
         self.save_images = save_images
         self.out_path = None
+        self.model = model
         all_layers = model.layers[:]
-        all_layers = [layer for layer in all_layers if layer.name.find('mask') == -1 and
+        self.all_layers = [layer for layer in all_layers if layer.name.find('mask') == -1 and
                       layer.name.lower().find('input') == -1 and
                       layer.name.lower().find('batch_normalization') == -1 and
                       layer.name.lower().find('activation') == -1]
+        if verbose:
+            self.print_all_layers()
+    def print_all_layers(self):
+        for layer in self.all_layers:
+            print(layer.name)
+    def define_desired_layers(self, desired_layer_names=None):
+        all_layers = self.all_layers
         if desired_layer_names:
             all_layers = [layer for layer in all_layers if layer.name in desired_layer_names]
         self.layer_outputs = [layer.output for layer in all_layers]  # We already have the input.
         self.layer_names = [layer.name for layer in all_layers]  #
-        self.activation_model = Model(inputs=model.input, outputs=self.layer_outputs)
+        self.activation_model = Model(inputs=self.model.input, outputs=self.layer_outputs)
 
     def predict_on_tensor(self, img_tensor):
         self.activations = self.activation_model.predict(img_tensor)
@@ -49,6 +57,29 @@ class visualization_model_class(object):
                 plt.savefig(os.path.join(self.out_path, str(image_index) + '_' + layer_name + '.png'))
                 plt.close()
             image_index += 1
+
+    def plot_activation(self, layer_name):
+        if not self.out_path and self.save_images:
+            self.define_output(os.path.join('.','activation_outputs'))
+        image_index = 0
+        print(self.layer_names)
+        index = self.layer_names.index(layer_name)
+        layer_activation = self.activations[index]
+        print(layer_name)
+        if len(layer_activation.shape) == 4:
+            layer_activation = layer_activation[...,0,:]
+        elif len(layer_activation.shape) == 5:
+            layer_activation = layer_activation[0,...,0,:]
+        display_grid = make_grid_from_map(layer_activation)
+        scale = 0.05
+        plt.figure(figsize=(display_grid.shape[1] * scale, scale * display_grid.shape[0]))
+        plt.title(layer_name)
+        plt.grid(False)
+        plt.imshow(display_grid, aspect='auto', cmap='gray')
+        if self.save_images:
+            plt.savefig(os.path.join(self.out_path, str(image_index) + '_' + layer_name + '.png'))
+            plt.close()
+        image_index += 1
 
     def make_grid_from_kernel(self, weights, image_index=0, layer_name=''):
         n_features = weights.shape[-1]
