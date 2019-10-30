@@ -120,7 +120,6 @@ class visualization_model_class(object):
                 kernels = kernels[...,0,:]
             elif len(kernels.shape) == 5:
                 kernels = kernels[0,...,0,:]
-            plt.figure()
             self.make_grid_from_kernel(kernels, image_index=image_index,layer_name=layer_name)
             image_index += 1
 
@@ -256,3 +255,11 @@ def visualize_filters(model):
             results[horizontal_start: horizontal_end, vertical_start: vertical_end, :] = filter_img
     plt.figure(figsize=(20, 20))
     plt.imshow(results)
+
+
+def main():
+    pass
+
+
+if __name__ == '__main__':
+    main()
