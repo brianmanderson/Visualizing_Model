@@ -6,13 +6,16 @@ from keras.models import Model
 
 class visualization_model_class(object):
     def __init__(self, model,verbose=True, save_images=False, out_path=os.path.join('.','Activations')):
+        self.layer_names = None
+        self.activation_model = None
         self.save_images = save_images
         self.out_path = out_path
         self.model = model
         all_layers = model.layers[:]
         self.all_layers = [layer for layer in all_layers if layer.name.find('mask') == -1 and
                       layer.name.lower().find('input') == -1 and
-                      layer.name.lower().find('batch_normalization') == -1]
+                      layer.name.lower().find('batch_normalization') == -1 and
+                           'batch_input_shape' not in layer.get_config()]
         if verbose:
             self.print_all_layers()
 
@@ -29,6 +32,8 @@ class visualization_model_class(object):
         self.activation_model = Model(inputs=self.model.input, outputs=self.layer_outputs)
 
     def predict_on_tensor(self, img_tensor):
+        if self.activation_model is None:
+            self.define_desired_layers()
         self.activations = self.activation_model.predict(img_tensor)
         if type(self.activations) != list:
             self.activations = [self.activations]
@@ -39,13 +44,17 @@ class visualization_model_class(object):
             os.makedirs(self.out_path)
 
     def plot_activations(self):
+        assert self.activations is not None, 'Need to run predict_on_tensor first!'
         if not self.out_path and self.save_images:
             self.define_output(os.path.join('.','activation_outputs'))
         elif self.save_images:
             self.define_output(self.out_path)
         image_index = 0
+        if self.layer_names is None:
+            self.define_desired_layers()
         print(self.layer_names)
         for layer_name, layer_activation in zip(self.layer_names, self.activations):
+            layer_activation = np.squeeze(layer_activation)
             print(layer_name)
             print(self.layer_names.index(layer_name) / len(self.layer_names) * 100)
             if len(layer_activation.shape) == 4:
