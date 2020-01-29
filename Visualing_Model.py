@@ -2,8 +2,8 @@ import keras.backend as K
 import numpy as np
 import os
 import matplotlib.pyplot as plt
+from keras.models import Model
 from keras.layers import Input
-
 
 class visualization_model_class(object):
     def __init__(self, model,verbose=True, save_images=False, out_path=os.path.join('.','Activations')):
