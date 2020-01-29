@@ -2,7 +2,8 @@ import keras.backend as K
 import numpy as np
 import os
 import matplotlib.pyplot as plt
-from keras.models import Model
+from keras.layers import Input
+
 
 class visualization_model_class(object):
     def __init__(self, model,verbose=True, save_images=False, out_path=os.path.join('.','Activations')):
@@ -12,10 +13,7 @@ class visualization_model_class(object):
         self.out_path = out_path
         self.model = model
         all_layers = model.layers[:]
-        self.all_layers = [layer for layer in all_layers if layer.name.find('mask') == -1 and
-                      layer.name.lower().find('input') == -1 and
-                      layer.name.lower().find('batch_normalization') == -1 and
-                           'batch_input_shape' not in layer.get_config()]
+        self.all_layers = [layer for layer in all_layers if type(layer) is not Input]
         if verbose:
             self.print_all_layers()
 
