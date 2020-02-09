@@ -3,8 +3,7 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 from keras.models import Model
-from keras.layers import Input
-from keras.engine import InputLayer
+
 
 class visualization_model_class(object):
     def __init__(self, model,verbose=True, save_images=False, out_path=os.path.join('.','Activations')):
@@ -14,7 +13,7 @@ class visualization_model_class(object):
         self.out_path = out_path
         self.model = model
         all_layers = model.layers[:]
-        self.all_layers = [layer for layer in all_layers if type(layer) is not Input and type(layer) is not InputLayer]
+        self.all_layers = [layer for layer in all_layers if type(layer).__name__.lower().find('input') == -1] # and type(layer).__name__.lower().find('activation') != -1
         if verbose:
             self.print_all_layers()
 
@@ -42,7 +41,7 @@ class visualization_model_class(object):
         if not os.path.exists(self.out_path):
             os.makedirs(self.out_path)
 
-    def plot_activations(self):
+    def plot_activations(self, ground_truth=None):
         assert self.activations is not None, 'Need to run predict_on_tensor first!'
         if not self.out_path and self.save_images:
             self.define_output(os.path.join('.','activation_outputs'))
@@ -52,12 +51,20 @@ class visualization_model_class(object):
         if self.layer_names is None:
             self.define_desired_layers()
         print(self.layer_names)
+        if ground_truth is not None:
+            ground_truth = np.argmax(np.squeeze(ground_truth),axis=-1)
         for layer_name, layer_activation in zip(self.layer_names, self.activations):
             layer_activation = np.squeeze(layer_activation)
             print(layer_name)
             print(self.layer_names.index(layer_name) / len(self.layer_names) * 100)
             if len(layer_activation.shape) == 4:
-                layer_activation = layer_activation[layer_activation.shape[0]//2,...]
+                middle_index = layer_activation.shape[0] // 2
+                if ground_truth is not None:
+                    index = np.where(ground_truth != 0)
+                    if index:
+                        indexes = np.unique(index[0])
+                        middle_index = indexes[len(indexes)//2]
+                layer_activation = layer_activation[middle_index,...]
             elif len(layer_activation.shape) == 5:
                 layer_activation = layer_activation[0,...,0,:]
             display_grid = make_grid_from_map(layer_activation)
