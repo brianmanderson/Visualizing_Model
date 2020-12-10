@@ -1,11 +1,11 @@
-import tensorflow.python.keras.backend as K
+import tensorflow.keras.backend as K
 import numpy as np
 import os
 import matplotlib.pyplot as plt
-from tensorflow.python.keras.models import Model
+from tensorflow.keras.models import Model
 
 
-class visualization_model_class(object):
+class ModelVisualizationClass(object):
     def __init__(self, model,verbose=True, save_images=False, out_path=os.path.join('.','Activations')):
         self.layer_names = None
         self.activation_model = None
