@@ -86,11 +86,12 @@ class ModelVisualizationClass(object):
         image_index = 0
         print(self.layer_names)
         index = self.layer_names.index(layer_name)
-        layer_activation = self.activations[index]
+        layer_activation = np.squeeze(self.activations[index])
+        activation_shape = layer_activation.shape
         print(layer_name)
-        if len(layer_activation.shape) == 4:
-            layer_activation = layer_activation[...,0,:]
-        elif len(layer_activation.shape) == 5:
+        if len(activation_shape) == 4:
+            layer_activation = layer_activation[activation_shape[0]//2]
+        elif len(activation_shape) == 5:
             layer_activation = layer_activation[0,...,0,:]
         display_grid = make_grid_from_map(layer_activation)
         scale = 0.05
