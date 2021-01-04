@@ -74,7 +74,7 @@ class ModelVisualizationClass(object):
             plt.title(layer_name)
             plt.grid(False)
             if self.save_images:
-                plt.savefig(os.path.join(self.out_path, str(image_index) + '_' + layer_name + '.png'))
+                plt.savefig(os.path.join(self.out_path, '{}_{}.png'.format(image_index, layer_name.replace("/", '.'))))
                 plt.close()
             image_index += 1
 
