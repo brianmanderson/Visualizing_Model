@@ -186,10 +186,9 @@ def make_grid_from_map(layer_activation):
                 channel_image = layer_activation[layer_activation.shape[0] // 2, :, :, col * images_per_row + row]
             else:
                 channel_image = layer_activation[:, :, col * images_per_row + row]
-            channel_image -= channel_image.mean()
-            channel_image /= channel_image.std()
-            channel_image *= 64
-            channel_image += 128
+            channel_image -= np.min(channel_image)
+            channel_image /= np.max(channel_image)
+            channel_image *= 255
             channel_image = np.clip(channel_image, 0, 255).astype('uint8')
             display_grid[row * rows_size: (row + 1) * rows_size,
             col * cols_size: (col + 1) * cols_size] = channel_image
